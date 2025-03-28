@@ -29,7 +29,7 @@ def optimize_nerf(
     """
 
     # Step 1. Create text embeddings from prompt
-    embeddings = prepare_embeddings(sds, prompt, neg_prompt, view_dependent=False)
+    embeddings = prepare_embeddings(sds, prompt, neg_prompt, view_dependent=True)
 
     # Step 2. Set up NeRF model
     model = NeRFNetwork(args).to(device)
@@ -160,32 +160,28 @@ def optimize_nerf(
                 text_cond = embeddings["default"]
             else:
                 ### YOUR CODE HERE ###
-                azimuth = azimuth.item()
-                
-                if -45 <= azimuth <= 45:
-                  # Front view
-                  text_cond = embeddings["front"]
-                elif 45 < azimuth <= 135 or -135 >= azimuth > -45:
-                  # Side view
-                  text_cond = embeddings["side"]
-                else:
-                  # Back view (-180 to -135 or 135 to 180)
-                  text_cond = embeddings["back"]
-
+                text_front = embeddings["front"]
+                text_side  = embeddings["side"]
+                text_back = embeddings["back"]
+                text_cond = embeddings["default"]
   
             ### YOUR CODE HERE ###
             # from torchvision.transforms import Resize 
             # pred_rgb = Resize((512,512))(pred_rgb)
             pred_rgb = torch.nn.functional.interpolate(pred_rgb,(512,512))
             latents = sds.encode_imgs(pred_rgb)
-
-            loss = sds.sds_loss(
+            if not args.view_dep_text:
+              loss = sds.sds_loss(
                 latents=latents,
                 text_embeddings=text_cond,
-                text_embeddings_uncond=text_uncond,
-                guidance_scale=100  
-            )
-            
+                text_embeddings_uncond=text_uncond 
+              )
+            else:
+                loss_front = sds.sds_loss(latents, text_front, text_embeddings_uncond=text_uncond)
+                loss_side = sds.sds_loss(latents, text_side, text_embeddings_uncond=text_uncond)
+                loss_back = sds.sds_loss(latents, text_back, text_embeddings_uncond=text_uncond)
+                loss_cond = sds.sds_loss(latents, text_cond, text_embeddings_uncond=text_uncond)
+                loss = loss_front + loss_side + loss_back + loss_cond           
             # regularizations
             if args.lambda_entropy > 0:
                 alphas = outputs["weights"].clamp(1e-5, 1 - 1e-5)
