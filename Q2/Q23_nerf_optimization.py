@@ -174,8 +174,9 @@ def optimize_nerf(
 
   
             ### YOUR CODE HERE ###
-            from torchvision.transforms import Resize 
-            pred_rgb = Resize((512,512))(pred_rgb)
+            # from torchvision.transforms import Resize 
+            # pred_rgb = Resize((512,512))(pred_rgb)
+            pred_rgb = torch.nn.functional.interpolate(pred_rgb,(512,512))
             latents = sds.encode_imgs(pred_rgb)
 
             loss = sds.sds_loss(
