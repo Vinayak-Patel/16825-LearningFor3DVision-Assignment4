@@ -194,4 +194,12 @@ I tried a few prompts but I was not able to get good results for this part. I wa
   <source src="website_results/videos/rgb_ep_40.mp4" type="video/mp4">
 </video>
 
+
+https://github.com/user-attachments/assets/f76ba9c3-c45e-4439-a312-577b774a0f8a
+
+https://github.com/user-attachments/assets/3b90b733-1141-49ff-bada-8eaa70e38cd3
+
 After 40 epochs. Left one is depth. Right one is RGB
+
+
+
